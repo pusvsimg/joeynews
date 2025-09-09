@@ -1,0 +1,54 @@
+# 工作流名称
+name: Sync Worker Script and Create ZIP
+
+# 工作流触发器
+on:
+  # 允许在 GitHub 的 Actions 页面手动触发此工作流
+  workflow_dispatch:
+
+  # 定时任务：设置为每天的国际标准时间（UTC）凌晨2点运行
+  schedule:
+    - cron: '0 2 * * *'
+
+# 定义工作任务
+jobs:
+  sync:
+    # 使用最新的 Ubuntu 虚拟环境来运行任务
+    runs-on: ubuntu-latest
+
+    # 授予工作流向你的仓库推送代码的写入权限
+    permissions:
+      contents: write
+
+    # 任务包含的步骤
+    steps:
+      # 步骤1: 检出（Checkout）你的仓库代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 步骤2: 下载 "少年你相信光吗" 文件并重命名为 "_worker.js"
+      - name: Download and rename script
+        run: |
+          curl -L -o ./_worker.js "https://raw.githubusercontent.com/byJoey/cfnew/main/%E5%B0%91%E5%B9%B4%E4%BD%A0%E7%9B%B8%E4%BF%A1%E5%85%89%E5%90%97"
+
+      # =======================================================
+      # V V V V V V V V V V V V V V V V V V V V V V V V V V V V V
+      #
+      # 步骤3 (新增): 将 _worker.js 压缩为 worker.zip
+      - name: Create worker.zip
+        run: |
+          # 使用 zip 命令创建一个名为 worker.zip 的压缩包
+          # 压缩包里只包含 _worker.js 这一个文件
+          zip worker.zip _worker.js
+      #
+      # ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
+      # =======================================================
+
+      # 步骤4: 提交所有变动的文件 (_worker.js 和 worker.zip)
+      - name: Commit and push if changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "CI: Update _worker.js and worker.zip"
+          # 将 file_pattern 修改为 '.', 意味着提交当前目录下所有的文件变动
+          # 这样可以确保 _worker.js 和 worker.zip 都被提交
+          file_pattern: .
