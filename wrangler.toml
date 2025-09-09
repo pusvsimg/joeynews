@@ -1,0 +1,6 @@
+# wrangler.toml (方案二配置)
+
+name = "joeynews"
+main = "_worker.js"
+compatibility_date = "2025-09-08"
+no_bundle = true
